@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-67af7bc6e54c31af7799c0cdb9a04c656d88e1d7",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.9.0"
+  },
+  "userSourceNameMap": {
+    "contracts/homework02/BeggingContract.sol": "project/contracts/homework02/BeggingContract.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/homework02/BeggingContract.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity 0.8.28;\r\n\r\ncontract BeggingContract {\r\n    mapping(address => uint256) public donations;\r\n    address public owner;\r\n    uint256 public donateDeadline;\r\n\r\n    // Fixed-size Top 3 leaderboard\r\n    address[3] public topDonors;\r\n    uint256[3] public topDonations;\r\n\r\n    constructor() {\r\n        owner = msg.sender;\r\n        donateDeadline = block.timestamp + 30 days; // Set the donation deadline to 30 days from contract deployment\r\n    }\r\n\r\n    event Donate(\r\n        address indexed donor, // The address of the donor\r\n        uint256 amount, // The amount donated\r\n        uint256 timestamp // The timestamp of the donation\r\n    );\r\n\r\n    function donate() public payable {\r\n        require(msg.value > 0, \"Donation must be greater than 0.\");\r\n        require(block.timestamp < donateDeadline, \"Donation period has ended.\");\r\n        donations[msg.sender] += msg.value;\r\n        _updateTopDonors(msg.sender, donations[msg.sender]);\r\n        emit Donate(msg.sender, msg.value, block.timestamp);\r\n    }\r\n\r\n    function getDonation(address donor) public view returns (uint256) {\r\n        return donations[donor];\r\n    }\r\n\r\n    modifier onlyOwner() {\r\n        require(msg.sender == owner, \"Only the owner can call this function.\");\r\n        _;\r\n    }\r\n\r\n    function withdraw() public onlyOwner {\r\n        uint256 balance = address(this).balance;\r\n        require(balance > 0, \"No funds to withdraw.\");\r\n        (bool success, ) = payable(owner).call{value: balance}(\"\");\r\n        require(success, \"Withdraw failed.\");\r\n    }\r\n\r\n    receive() external payable {\r\n        donate();\r\n    }\r\n\r\n    function _updateTopDonors(address donor, uint256 amount) internal {\r\n        // 1) Check if already in Top 3\r\n        for (uint256 i = 0; i < 3; i++) {\r\n            if (topDonors[i] == donor) {\r\n                topDonations[i] = amount;\r\n                // Bubble up — if the new amount exceeds a higher-ranked donor\r\n                for (; i > 0 && topDonations[i] > topDonations[i - 1]; i--) {\r\n                    (topDonors[i], topDonors[i - 1]) = (\r\n                        topDonors[i - 1],\r\n                        topDonors[i]\r\n                    );\r\n                    (topDonations[i], topDonations[i - 1]) = (\r\n                        topDonations[i - 1],\r\n                        topDonations[i]\r\n                    );\r\n                }\r\n                return;\r\n            }\r\n        }\r\n        // 2) Not in Top 3 — check if eligible to enter\r\n        for (uint256 i = 0; i < 3; i++) {\r\n            if (amount > topDonations[i]) {\r\n                // Shift lower-ranked entries down\r\n                for (uint256 j = 2; j > i; j--) {\r\n                    topDonors[j] = topDonors[j - 1];\r\n                    topDonations[j] = topDonations[j - 1];\r\n                }\r\n                topDonors[i] = donor;\r\n                topDonations[i] = amount;\r\n                break;\r\n            }\r\n        }\r\n    }\r\n\r\n    function getTop3Donors() public view returns (address[] memory) {\r\n        address[] memory result = new address[](3);\r\n        for (uint256 i = 0; i < 3; i++) {\r\n            result[i] = topDonors[i];\r\n        }\r\n        return result;\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}
