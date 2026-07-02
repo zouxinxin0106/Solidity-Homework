@@ -26,6 +26,9 @@
     "typescript": "~6.0.3"
   },
   "dependencies": {
-    "@nomicfoundation/hardhat-verify": "^3.0.20"
+    "@chainlink/contracts": "^1.5.0",
+    "@nomicfoundation/hardhat-verify": "^3.0.20",
+    "@openzeppelin/contracts": "^5.6.1",
+    "@openzeppelin/contracts-upgradeable": "^5.6.1"
   }
 }
